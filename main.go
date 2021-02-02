@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -14,14 +15,15 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/version"
 )
 
-var config = setup.NewConfig()
-
-func init() {
-	prometheus.MustRegister(version.NewCollector("tf_exporter"))
-}
+// Build information. Populated at build-time via ldflags.
+var (
+	Version   string
+	Commit    string
+	GoVersion = runtime.Version()
+	BuildDate string
+)
 
 func newHandler(metrics collector.Metrics, config *setup.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -55,12 +57,9 @@ func newHandler(metrics collector.Metrics, config *setup.Config) http.HandlerFun
 }
 
 func main() {
-	level.Info(config.Logger).Log(
-		"msg", "Starting tf_exporter",
-		"go version", "",
-		"version", "Inject version v1.0.0",
-		"build date", "",
-	)
+	config := setup.NewConfig()
+	level.Info(config.Logger).Log("msg", "Starting tf_exporter", "version", Version, "revision", Commit)
+	level.Debug(config.Logger).Log("msg", "Build Context", "go", GoVersion, "date", BuildDate)
 
 	handlerFunc := newHandler(collector.NewMetrics(), config)
 	http.Handle("/metrics", promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, handlerFunc))

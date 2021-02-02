@@ -13,8 +13,8 @@ services:
     tty: true
     stdin_open: true
     command:
-      # - --api.insecure-cert
-      # - --api.address ${TF_API_ADDRESS}
+      # - --api-insecure-skip-verify
+      # - --api-address ${TF_API_ADDRESS}
       # - -o ${TF_ORGANIZATION}
       - --log-level debug
     environment:

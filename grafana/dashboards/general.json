@@ -81,7 +81,7 @@
       "pluginVersion": "7.3.7",
       "targets": [
         {
-          "expr": "tf_workspaces_count",
+          "expr": "tf_workspaces_total",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -150,7 +150,7 @@
       "strokeWidth": 1,
       "targets": [
         {
-          "expr": "sum by (current_run_status)(tf_workspaces_workspace_info)",
+          "expr": "sum by (current_run_status)(tf_workspaces_info)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -233,7 +233,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (current_run_status)(tf_workspaces_workspace_info)",
+          "expr": "sum by (current_run_status)(tf_workspaces_info)",
           "instant": false,
           "interval": "",
           "legendFormat": "{{current_run_status}}",
@@ -325,7 +325,7 @@
       "pluginVersion": "7.3.7",
       "targets": [
         {
-          "expr": "tf_workspaces_workspace_info",
+          "expr": "tf_workspaces_info",
           "format": "table",
           "instant": true,
           "interval": "",

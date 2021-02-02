@@ -12,8 +12,12 @@ FROM golang:1.15-alpine AS build
 
 WORKDIR /go/src/github.com/kaizendorks/terraform-cloud-exporter
 
+ARG tag="v0.0.0"
+ARG sha="hash_commit"
+
 COPY . .
-RUN go build
+RUN go build \
+    -ldflags="-X main.Version=${tag} -X main.Commit=${sha} -X main.BuildDate=$(date '+%Y%m%d-%H:%M:%S')"
 
 FROM alpine:3 AS prod
 

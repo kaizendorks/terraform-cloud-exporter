@@ -14,18 +14,23 @@ import (
 
 const (
 	// workspaces is the Metric subsystem we use.
-	workspaces = "workspaces"
+	workspacesSubsystem = "workspaces"
+
+	// TODO: We might want to allow the user to control pageSize via cli/config
+	// 		* This could be handy for users hitting API rate limits (30 per sec).
+	// 		* Investigate performance of (100 requests for 1 item) vs (1 request for 100 items).
+	pageSize = 20
 )
 
 // Metric descriptors.
 var (
-	WorkspacesCount = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, workspaces, "count"),
+	WorkspacesTotal = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, workspacesSubsystem, "total"),
 		"Total number of existing workspaces.",
 		[]string{}, nil,
 	)
 	WorkspacesInfo = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, workspaces, "workspace_info"),
+		prometheus.BuildFQName(namespace, workspacesSubsystem, "info"),
 		"Information about existing workspaces",
 		[]string{"id", "name", "organization", "terraform_version", "created_at", "environment", "current_run", "current_run_status", "current_run_created_at"}, nil,
 	)
@@ -40,7 +45,7 @@ func init() {
 
 // Name of the Scraper. Should be unique.
 func (ScrapeWorkspaces) Name() string {
-	return workspaces
+	return workspacesSubsystem
 }
 
 // Help describes the role of the Scraper.
@@ -53,14 +58,11 @@ func (ScrapeWorkspaces) Version() string {
 	return "v2"
 }
 
-// TODO: We might want to allow the user to control pageSize via cli/config
-// This could be handy for users hitting API rate limits (30 per sec).
-// Investigate performance of (100 requests for 1 item) vs (1 request for 100 items).
 func getWorkspacesListPage(ctx context.Context, pageNumber int, config *setup.Config, ch chan<- prometheus.Metric) error {
 	include := "current_run"
 	workspacesList, err := config.Client.Workspaces.List(ctx, config.Organization, tfe.WorkspaceListOptions{
 		ListOptions: tfe.ListOptions{
-			PageSize:   20,
+			PageSize:   pageSize,
 			PageNumber: pageNumber,
 		},
 		Include: &include,
@@ -93,18 +95,18 @@ func getWorkspacesListPage(ctx context.Context, pageNumber int, config *setup.Co
 	return nil
 }
 
-// Scrape collects data from database connection and sends it over channel as prometheus metric.
+// Scrape collects data from Terraform API and sends it over channel as prometheus metric.
 func (ScrapeWorkspaces) Scrape(ctx context.Context, config *setup.Config, ch chan<- prometheus.Metric) error {
 	// TODO: Dummy list call to get to get the number of workspaces.
 	//       Investigate if there is a better way to get the workspace count.
 	workspacesList, err := config.Client.Workspaces.List(ctx, config.Organization, tfe.WorkspaceListOptions{
-		ListOptions: tfe.ListOptions{PageSize: 20},
+		ListOptions: tfe.ListOptions{PageSize: pageSize},
 	})
 	if err != nil {
 		return err
 	}
 
-	ch <- prometheus.MustNewConstMetric(WorkspacesCount, prometheus.GaugeValue, float64(workspacesList.Pagination.TotalCount))
+	ch <- prometheus.MustNewConstMetric(WorkspacesTotal, prometheus.GaugeValue, float64(workspacesList.Pagination.TotalCount))
 
 	g, ctx := errgroup.WithContext(ctx)
 	for i := 1; i <= workspacesList.Pagination.TotalPages; i++ {

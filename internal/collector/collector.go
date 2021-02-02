@@ -48,7 +48,7 @@ var (
 	)
 )
 
-// New returns a new Terraform API exporter for the provided tfe.Config.
+// New returns a new Terraform API exporter for the provided Config.
 func New(ctx context.Context, config *setup.Config, metrics Metrics) *Exporter {
 	return &Exporter{
 		ctx:      ctx,
@@ -77,11 +77,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) {
 	e.metrics.TotalScrapes.Inc()
-
-	scrapeTime := time.Now()
 	e.metrics.Error.Set(0)
-
-	ch <- prometheus.MustNewConstMetric(scrapeDurationDesc, prometheus.GaugeValue, time.Since(scrapeTime).Seconds(), "connection")
 
 	var wg sync.WaitGroup
 	defer wg.Wait()
