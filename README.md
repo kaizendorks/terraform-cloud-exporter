@@ -6,10 +6,10 @@
 [![Docker Release](https://github.com/kaizendorks/terraform-cloud-exporter/workflows/Docker%20Release/badge.svg)](https://github.com//kaizendorks/terraform-cloud-exporter/actions?workflow=Docker%20Release)
 
 
-## Description
+## Sample Dashboard
 | ![Sample Dashboard](workspace-dasbhoard.png?raw=true "Sample Dashboard") |
 |:--:|
-| *Sample dashboard available in* `grafana/dashboards/general.json` |
+| *Source code:* `grafana/dashboards/general.json` |
 
 ## Usage
 1. Create API Token:
