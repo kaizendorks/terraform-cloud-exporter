@@ -97,7 +97,7 @@ func getWorkspacesListPage(ctx context.Context, pageNumber int, config *setup.Co
 
 // Scrape collects data from Terraform API and sends it over channel as prometheus metric.
 func (ScrapeWorkspaces) Scrape(ctx context.Context, config *setup.Config, ch chan<- prometheus.Metric) error {
-	// TODO: Dummy list call to get to get the number of workspaces.
+	// TODO: Dummy list call to get the number of workspaces.
 	//       Investigate if there is a better way to get the workspace count.
 	workspacesList, err := config.Client.Workspaces.List(ctx, config.Organization, tfe.WorkspaceListOptions{
 		ListOptions: tfe.ListOptions{PageSize: pageSize},
