@@ -16,9 +16,9 @@ import (
 )
 
 type CLI struct {
-	// TODO: Only works for single org.
-	// Add mutli ORG capabilities for comma separated list or missing for "All"
-	Organization          string   `required:"" short:"o" env:"TF_ORGANIZATION" help:"Name of the Organization to scrape from."`
+	// TODO: Investigate solution for scrapping "All" organizations.
+	// We may have to make a call to list orgs at the start of evey scrape.
+	Organizations         []string `required:"" short:"o" env:"TF_ORGANIZATIONS" placeholder:"ORG1,ORG2" help:"List of the Organization names to scrape from."`
 	APIToken              string   `short:"t" env:"TF_API_TOKEN" help:"User token for autheticating with the API."`
 	APITokenFile          *os.File `placeholder:"/path/to/file" help:"File containing user token for autheticating with the API."`
 	APIAddress            string   `placeholder:"https://app.terraform.io/" help:"Terraform API address to scrape metrics from."`

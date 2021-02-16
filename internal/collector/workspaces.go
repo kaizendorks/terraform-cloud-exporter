@@ -24,11 +24,6 @@ const (
 
 // Metric descriptors.
 var (
-	WorkspacesTotal = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, workspacesSubsystem, "total"),
-		"Total number of existing workspaces.",
-		[]string{}, nil,
-	)
 	WorkspacesInfo = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, workspacesSubsystem, "info"),
 		"Information about existing workspaces",
@@ -58,9 +53,9 @@ func (ScrapeWorkspaces) Version() string {
 	return "v2"
 }
 
-func getWorkspacesListPage(ctx context.Context, pageNumber int, config *setup.Config, ch chan<- prometheus.Metric) error {
+func getWorkspacesListPage(ctx context.Context, pageNumber int, name string, config *setup.Config, ch chan<- prometheus.Metric) error {
 	include := "current_run"
-	workspacesList, err := config.Client.Workspaces.List(ctx, config.Organization, tfe.WorkspaceListOptions{
+	workspacesList, err := config.Client.Workspaces.List(ctx, name, tfe.WorkspaceListOptions{
 		ListOptions: tfe.ListOptions{
 			PageSize:   pageSize,
 			PageNumber: pageNumber,
@@ -97,22 +92,28 @@ func getWorkspacesListPage(ctx context.Context, pageNumber int, config *setup.Co
 
 // Scrape collects data from Terraform API and sends it over channel as prometheus metric.
 func (ScrapeWorkspaces) Scrape(ctx context.Context, config *setup.Config, ch chan<- prometheus.Metric) error {
-	// TODO: Dummy list call to get the number of workspaces.
-	//       Investigate if there is a better way to get the workspace count.
-	workspacesList, err := config.Client.Workspaces.List(ctx, config.Organization, tfe.WorkspaceListOptions{
-		ListOptions: tfe.ListOptions{PageSize: pageSize},
-	})
-	if err != nil {
-		return err
-	}
-
-	ch <- prometheus.MustNewConstMetric(WorkspacesTotal, prometheus.GaugeValue, float64(workspacesList.Pagination.TotalCount))
-
 	g, ctx := errgroup.WithContext(ctx)
-	for i := 1; i <= workspacesList.Pagination.TotalPages; i++ {
-		pageNumber := i
+	for _, name := range config.Organizations {
+		name := name
 		g.Go(func() error {
-			return getWorkspacesListPage(ctx, pageNumber, config, ch)
+			// TODO: Dummy list call to get the number of workspaces.
+			//       Investigate if there is a better way to get the workspace count.
+			workspacesList, err := config.Client.Workspaces.List(ctx, config.Organizations[0], tfe.WorkspaceListOptions{
+				ListOptions: tfe.ListOptions{PageSize: pageSize},
+			})
+			if err != nil {
+				return err
+			}
+
+			// TODO: We should be able to do some of this work in parallel.
+			//       Investigate potential complications before enabling it.
+			for i := 1; i <= workspacesList.Pagination.TotalPages; i++ {
+				if err := getWorkspacesListPage(ctx, i, name, config, ch); err != nil {
+					return err
+				}
+			}
+
+			return nil
 		})
 	}
 
