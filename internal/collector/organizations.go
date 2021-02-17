@@ -2,6 +2,7 @@ package collector
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"golang.org/x/sync/errgroup"
@@ -50,7 +51,7 @@ func (ScrapeOrganizations) Version() string {
 func getOrganization(ctx context.Context, name string, config *setup.Config, ch chan<- prometheus.Metric) error {
 	o, err := config.Client.Organizations.Read(ctx, name)
 	if err != nil {
-		return err
+		return fmt.Errorf("%v, organization=%s", err, name)
 	}
 
 	select {

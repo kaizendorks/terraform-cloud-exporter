@@ -2,6 +2,7 @@ package collector
 
 import (
 	"context"
+	"fmt"
 
 	"golang.org/x/sync/errgroup"
 
@@ -53,17 +54,17 @@ func (ScrapeWorkspaces) Version() string {
 	return "v2"
 }
 
-func getWorkspacesListPage(ctx context.Context, pageNumber int, name string, config *setup.Config, ch chan<- prometheus.Metric) error {
+func getWorkspacesListPage(ctx context.Context, page int, organization string, config *setup.Config, ch chan<- prometheus.Metric) error {
 	include := "current_run"
-	workspacesList, err := config.Client.Workspaces.List(ctx, name, tfe.WorkspaceListOptions{
+	workspacesList, err := config.Client.Workspaces.List(ctx, organization, tfe.WorkspaceListOptions{
 		ListOptions: tfe.ListOptions{
 			PageSize:   pageSize,
-			PageNumber: pageNumber,
+			PageNumber: page,
 		},
 		Include: &include,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("%v, (organization=%s, page=%d)", err, organization, page)
 	}
 
 	for _, w := range workspacesList.Items {
@@ -98,11 +99,11 @@ func (ScrapeWorkspaces) Scrape(ctx context.Context, config *setup.Config, ch cha
 		g.Go(func() error {
 			// TODO: Dummy list call to get the number of workspaces.
 			//       Investigate if there is a better way to get the workspace count.
-			workspacesList, err := config.Client.Workspaces.List(ctx, config.Organizations[0], tfe.WorkspaceListOptions{
+			workspacesList, err := config.Client.Workspaces.List(ctx, name, tfe.WorkspaceListOptions{
 				ListOptions: tfe.ListOptions{PageSize: pageSize},
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("%v, organization=%s", err, name)
 			}
 
 			// TODO: We should be able to do some of this work in parallel.
