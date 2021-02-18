@@ -16,11 +16,12 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "iteration": 1613498535180,
   "links": [],
   "panels": [
     {
-      "datasource": null,
-      "description": "Total number of workspaces.",
+      "datasource": "Prometheus",
+      "description": "Total number of organizations.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -63,6 +64,168 @@
         "x": 0,
         "y": 0
       },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "7.3.7",
+      "targets": [
+        {
+          "expr": "sum(tf_organizations_info{name=~\"$organizations\"})",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Organization Count",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null,
+            "displayMode": "auto",
+            "filterable": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 19,
+        "x": 5,
+        "y": 0
+      },
+      "id": 17,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "terraform_version"
+          }
+        ]
+      },
+      "pluginVersion": "7.3.7",
+      "targets": [
+        {
+          "expr": "tf_organizations_info{name=~\"$organizations\"}",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "queryType": "randomWalk",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Organization Summary",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true,
+              "__name__": true,
+              "instance": true,
+              "job": true
+            },
+            "indexByName": {
+              "Time": 1,
+              "Value": 8,
+              "__name__": 2,
+              "created_at": 0,
+              "current_run": 9,
+              "environment": 11,
+              "id": 4,
+              "instance": 6,
+              "job": 7,
+              "name": 3,
+              "organization": 5,
+              "terraform_version": 10
+            },
+            "renameByName": {}
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": "Prometheus",
+      "description": "Total number of workspaces.",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": null,
+            "filterable": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "yellow",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "__name__"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 281
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 5,
+        "x": 0,
+        "y": 8
+      },
       "id": 8,
       "options": {
         "colorMode": "value",
@@ -81,7 +244,7 @@
       "pluginVersion": "7.3.7",
       "targets": [
         {
-          "expr": "tf_workspaces_total",
+          "expr": "sum(tf_workspaces_info{organization=~\"$organizations\",current_run_status=~\"$workspace_status\"})",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -103,7 +266,7 @@
         "label": "Others",
         "threshold": 0
       },
-      "datasource": null,
+      "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -133,9 +296,9 @@
         "h": 8,
         "w": 7,
         "x": 5,
-        "y": 0
+        "y": 8
       },
-      "id": 14,
+      "id": 16,
       "interval": null,
       "legend": {
         "header": "Total",
@@ -150,9 +313,9 @@
       "strokeWidth": 1,
       "targets": [
         {
-          "expr": "sum by (current_run_status)(tf_workspaces_info)",
+          "expr": "sum by(current_run_status)(tf_workspaces_info{organization=~\"$organizations\",current_run_status=~\"$workspace_status\"})",
           "format": "time_series",
-          "instant": false,
+          "instant": true,
           "interval": "",
           "legendFormat": "{{current_run_status}}",
           "refId": "A"
@@ -171,7 +334,7 @@
       "cacheTimeout": null,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -201,7 +364,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 8
       },
       "hiddenSeries": false,
       "id": 10,
@@ -233,7 +396,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (current_run_status)(tf_workspaces_info)",
+          "expr": "sum by(current_run_status)(tf_workspaces_info{organization=~\"$organizations\",current_run_status=~\"$workspace_status\"})",
           "instant": false,
           "interval": "",
           "legendFormat": "{{current_run_status}}",
@@ -307,10 +470,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 16
       },
       "id": 6,
       "options": {
@@ -325,7 +488,7 @@
       "pluginVersion": "7.3.7",
       "targets": [
         {
-          "expr": "tf_workspaces_info",
+          "expr": "tf_workspaces_info{organization=~\"$organizations\",current_run_status=~\"$workspace_status\"}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -373,7 +536,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
+      "datasource": "Prometheus",
       "description": "Time taken by each individual scraper.",
       "fieldConfig": {
         "defaults": {
@@ -404,7 +567,7 @@
         "h": 8,
         "w": 18,
         "x": 0,
-        "y": 15
+        "y": 24
       },
       "hiddenSeries": false,
       "id": 2,
@@ -486,7 +649,7 @@
       }
     },
     {
-      "datasource": null,
+      "datasource": "Prometheus",
       "description": "Result of last API scrape attempt.",
       "fieldConfig": {
         "defaults": {
@@ -536,7 +699,7 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 15
+        "y": 24
       },
       "id": 4,
       "options": {
@@ -570,12 +733,71 @@
       "type": "stat"
     }
   ],
-  "refresh": false,
+  "refresh": "1m",
   "schemaVersion": 26,
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": "",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "Prometheus",
+        "definition": "tf_organizations_info",
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "organization",
+        "multi": false,
+        "name": "organizations",
+        "options": [],
+        "query": "tf_organizations_info",
+        "refresh": 1,
+        "regex": "/.*name=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": "",
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "tf_workspaces_info",
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "status",
+        "multi": true,
+        "name": "workspace_status",
+        "options": [],
+        "query": "tf_workspaces_info",
+        "refresh": 1,
+        "regex": "/.*current_run_status=\"([^\"]*).*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
   },
   "time": {
     "from": "now-5m",

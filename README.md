@@ -7,7 +7,7 @@
 
 
 ## Sample Dashboard
-| ![Sample Dashboard](workspace-dasbhoard.png?raw=true "Sample Dashboard") |
+| ![Sample Dashboard](sample-dasbhoard.png?raw=true "Sample Dashboard") |
 |:--:|
 | *Source code:* `grafana/dashboards/general.json` |
 
@@ -31,7 +31,7 @@
 ### Full list of Flags
 
         -h, --help                                     Show context-sensitive help.
-        -o, --organization=STRING                      Name of the Organization to scrape from ($TF_ORGANIZATION).
+        -o, --organizations=ORG1,ORG2,...              List of the Organization names to scrape from ($TF_ORGANIZATIONS).
         -t, --api-token=STRING                         User token for autheticating with the API ($TF_API_TOKEN).
             --api-token-file=/path/to/file             File containing user token for autheticating with the API.
             --api-address=https://app.terraform.io/    Terraform API address to scrape metrics from.
@@ -45,7 +45,7 @@
 1. Create a `.env` file with your token:
 
         TF_API_TOKEN=<Your.atlasv1.Token>
-        TF_ORGANIZATION=<YourOrg>
+        TF_ORGANIZATIONS=<YourOrg1,...>
         TF_API_ADDRESS=<YourApiAddress - Optional: Only required for Terraform enterprise.>
 1. Run the Exporter, in one of two modes:
     1. Standalone exporter: `docker-compose run --rm --service-ports --entrypoint sh exporter`

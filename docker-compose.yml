@@ -15,11 +15,11 @@ services:
     command:
       # - --api-insecure-skip-verify
       # - --api-address ${TF_API_ADDRESS}
-      # - -o ${TF_ORGANIZATION}
+      # - -o ${TF_ORGANIZATIONS}
       - --log-level debug
     environment:
       - TF_API_TOKEN
-      - TF_ORGANIZATION
+      - TF_ORGANIZATIONS
     ports:
       - 9100:9100
     volumes:
