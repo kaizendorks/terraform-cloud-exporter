@@ -11,6 +11,8 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
+	tfe "github.com/hashicorp/go-tfe"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -25,7 +27,7 @@ const (
 type Exporter struct {
 	ctx      context.Context
 	logger   log.Logger
-	config   *setup.Config
+	config   setup.Config
 	scrapers []Scraper
 	metrics  Metrics
 }
@@ -49,7 +51,7 @@ var (
 )
 
 // New returns a new Terraform API exporter for the provided Config.
-func New(ctx context.Context, config *setup.Config, metrics Metrics) *Exporter {
+func New(ctx context.Context, config setup.Config, metrics Metrics) *Exporter {
 	return &Exporter{
 		ctx:      ctx,
 		logger:   config.Logger,
@@ -77,6 +79,20 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) {
 	e.metrics.TotalScrapes.Inc()
+	if len(e.config.Organizations) == 0 {
+		// Note: At some point this will return a paginated response.
+		oo, err := e.config.Client.Organizations.List(ctx, tfe.OrganizationListOptions{})
+		if err != nil {
+			e.metrics.Error.Set(1)
+			level.Error(e.logger).Log("msg", "Unable to List Organizations", "err", err)
+			return
+		}
+
+		for _, o := range oo.Items {
+			e.config.Organizations = append(e.config.Organizations, o.Name)
+		}
+	}
+
 	e.metrics.Error.Set(0)
 
 	var wg sync.WaitGroup
@@ -87,7 +103,7 @@ func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) {
 			defer wg.Done()
 			label := "collect." + scraper.Name()
 			scrapeTime := time.Now()
-			if err := scraper.Scrape(ctx, e.config, ch); err != nil {
+			if err := scraper.Scrape(ctx, &e.config, ch); err != nil {
 				level.Error(e.logger).Log("msg", "Error from scraper", "scraper", scraper.Name(), "err", err)
 				e.metrics.ScrapeErrors.WithLabelValues(label).Inc()
 				e.metrics.Error.Set(1)

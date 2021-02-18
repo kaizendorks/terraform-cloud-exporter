@@ -25,7 +25,7 @@ var (
 	BuildDate string
 )
 
-func newHandler(metrics collector.Metrics, config *setup.Config) http.HandlerFunc {
+func newHandler(metrics collector.Metrics, config setup.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Use request context for cancellation when connection gets closed.
 		ctx := r.Context()

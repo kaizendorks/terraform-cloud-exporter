@@ -18,20 +18,24 @@
 1. Save the token to a file or as the environment variable `TF_API_TOKEN`.
 
 #### Native
-1. `go get -u github.com/kaizendorks/terraform-cloud-exporter`
-1. `terraform-cloud-exporter -o <YourOrg> --api-token-file=/path/to/file`
+
+        go get -u github.com/kaizendorks/terraform-cloud-exporter
+
+        terraform-cloud-exporter \
+            --organizations=<YourOrg1>,<YourOrg2>,... \
+            --api-token-file=/path/to/file
 
 #### Docker
 
         docker run -it --rm \
             -p 9100:9100 \
             -e TF_API_TOKEN=<YourToken> \
-        terraform-cloud-exporter -o <YourOrg>
+        terraform-cloud-exporter
 
 ### Full list of Flags
 
         -h, --help                                     Show context-sensitive help.
-        -o, --organizations=ORG1,ORG2,...              List of the Organization names to scrape from ($TF_ORGANIZATIONS).
+        -o, --organizations=ORG1,ORG2,...              List of the Organization names to scrape from (Omit to scrape all) ($TF_ORGANIZATIONS).
         -t, --api-token=STRING                         User token for autheticating with the API ($TF_API_TOKEN).
             --api-token-file=/path/to/file             File containing user token for autheticating with the API.
             --api-address=https://app.terraform.io/    Terraform API address to scrape metrics from.

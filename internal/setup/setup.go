@@ -16,9 +16,7 @@ import (
 )
 
 type CLI struct {
-	// TODO: Investigate solution for scrapping "All" organizations.
-	// We may have to make a call to list orgs at the start of evey scrape.
-	Organizations         []string `required:"" short:"o" env:"TF_ORGANIZATIONS" placeholder:"ORG1,ORG2" help:"List of the Organization names to scrape from."`
+	Organizations         []string `short:"o" env:"TF_ORGANIZATIONS" placeholder:"ORG1,ORG2" help:"List of the Organization names to scrape from (Ommit to scrape all)."`
 	APIToken              string   `short:"t" env:"TF_API_TOKEN" help:"User token for autheticating with the API."`
 	APITokenFile          *os.File `placeholder:"/path/to/file" help:"File containing user token for autheticating with the API."`
 	APIAddress            string   `placeholder:"https://app.terraform.io/" help:"Terraform API address to scrape metrics from."`
@@ -35,8 +33,8 @@ type Config struct {
 }
 
 // NewConfig returns a new Config object that was initialized according to the CLI params.
-func NewConfig() *Config {
-	config := &Config{}
+func NewConfig() Config {
+	config := Config{}
 	kong.Parse(&config.CLI)
 	config.setupLogger()
 	config.setupClient()
