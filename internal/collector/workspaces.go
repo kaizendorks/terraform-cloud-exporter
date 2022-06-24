@@ -55,13 +55,13 @@ func (ScrapeWorkspaces) Version() string {
 }
 
 func getWorkspacesListPage(ctx context.Context, page int, organization string, config *setup.Config, ch chan<- prometheus.Metric) error {
-	include := "current_run"
-	workspacesList, err := config.Client.Workspaces.List(ctx, organization, tfe.WorkspaceListOptions{
+	include := []tfe.WSIncludeOpt{"current_run"}
+	workspacesList, err := config.Client.Workspaces.List(ctx, organization, &tfe.WorkspaceListOptions{
 		ListOptions: tfe.ListOptions{
 			PageSize:   pageSize,
 			PageNumber: page,
 		},
-		Include: &include,
+		Include: include,
 	})
 	if err != nil {
 		return fmt.Errorf("%v, (organization=%s, page=%d)", err, organization, page)
@@ -99,7 +99,7 @@ func (ScrapeWorkspaces) Scrape(ctx context.Context, config *setup.Config, ch cha
 		g.Go(func() error {
 			// TODO: Dummy list call to get the number of workspaces.
 			//       Investigate if there is a better way to get the workspace count.
-			workspacesList, err := config.Client.Workspaces.List(ctx, name, tfe.WorkspaceListOptions{
+			workspacesList, err := config.Client.Workspaces.List(ctx, name, &tfe.WorkspaceListOptions{
 				ListOptions: tfe.ListOptions{PageSize: pageSize},
 			})
 			if err != nil {
