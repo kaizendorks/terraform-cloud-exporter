@@ -1,4 +1,4 @@
-FROM golang:1.15-alpine AS dev
+FROM golang:1.18-alpine AS dev
 
 RUN apk add --no-cache \
     g++ \
@@ -8,7 +8,7 @@ WORKDIR /go/src/github.com/kaizendorks/terraform-cloud-exporter
 
 ENTRYPOINT ["./hot-reload.sh"]
 
-FROM golang:1.15-alpine AS build
+FROM golang:1.18-alpine AS build
 
 WORKDIR /go/src/github.com/kaizendorks/terraform-cloud-exporter
 
