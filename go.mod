@@ -3,7 +3,7 @@ module github.com/kaizendorks/terraform-cloud-exporter
 go 1.15
 
 require (
-	github.com/alecthomas/kong v0.2.12
+	github.com/alecthomas/kong v0.6.1
 	github.com/go-kit/kit v0.12.0
 	github.com/hashicorp/go-tfe v0.12.0
 	github.com/prometheus/client_golang v1.11.0
