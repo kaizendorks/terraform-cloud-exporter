@@ -78,7 +78,6 @@ func getOrganization(ctx context.Context, name string, config *setup.Config, ch 
 func (ScrapeOrganizations) Scrape(ctx context.Context, config *setup.Config, ch chan<- prometheus.Metric) error {
 	g, ctx := errgroup.WithContext(ctx)
 	for _, name := range config.Organizations {
-		name := name
 		g.Go(func() error {
 			return getOrganization(ctx, name, config, ch)
 		})

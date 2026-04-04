@@ -3,12 +3,9 @@ package setup
 import (
 	"bufio"
 	"crypto/tls"
+	"log/slog"
 	"net/http"
 	"os"
-	"time"
-
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 
 	"github.com/alecthomas/kong"
 
@@ -29,7 +26,7 @@ type CLI struct {
 type Config struct {
 	CLI
 	Client tfe.Client
-	Logger log.Logger
+	Logger *slog.Logger
 }
 
 // NewConfig returns a new Config object that was initialized according to the CLI params.
@@ -42,31 +39,25 @@ func NewConfig() Config {
 }
 
 func (c *Config) setupLogger() {
-	// Changes timestamp from 9 variable to 3 fixed
-	// decimals (.130 instead of .130987456).
-	timestampFormat := log.TimestampFormat(
-		func() time.Time { return time.Now().UTC() },
-		"2006-01-02T15:04:05.000Z07:00",
-	)
-
-	if c.LogFormat == "json" {
-		c.Logger = log.NewJSONLogger(log.NewSyncWriter(os.Stderr))
-	} else {
-		c.Logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
-	}
-
+	var logLevel slog.Level
 	switch c.LogLevel {
 	case "debug":
-		c.Logger = level.NewFilter(c.Logger, level.AllowDebug())
+		logLevel = slog.LevelDebug
 	case "warn":
-		c.Logger = level.NewFilter(c.Logger, level.AllowWarn())
+		logLevel = slog.LevelWarn
 	case "error":
-		c.Logger = level.NewFilter(c.Logger, level.AllowError())
+		logLevel = slog.LevelError
 	default:
-		c.Logger = level.NewFilter(c.Logger, level.AllowInfo())
+		logLevel = slog.LevelInfo
 	}
 
-	c.Logger = log.With(c.Logger, "ts", timestampFormat, "caller", log.DefaultCaller)
+	opts := &slog.HandlerOptions{Level: logLevel, AddSource: true}
+
+	if c.LogFormat == "json" {
+		c.Logger = slog.New(slog.NewJSONHandler(os.Stderr, opts))
+	} else {
+		c.Logger = slog.New(slog.NewTextHandler(os.Stderr, opts))
+	}
 }
 
 func (c *Config) setupClient() {
@@ -80,27 +71,30 @@ func (c *Config) setupClient() {
 	} else if c.APIToken != "" {
 		config.Token = c.APIToken
 	} else {
-		level.Error(c.Logger).Log("msg", "Error creating tfe client", "err", "Missing API Token.")
+		c.Logger.Error("Error creating tfe client", "err", "Missing API Token.")
 		os.Exit(1)
 	}
 
 	if c.APIAddress != "" {
 		config.Address = c.APIAddress
-		level.Info(c.Logger).Log("msg", "Overwritten Terraform API address", "address", c.APIAddress)
+		c.Logger.Info("Overwritten Terraform API address", "address", c.APIAddress)
 	}
 
 	if c.APIInsecureSkipVerify {
 		config.HTTPClient = &http.Client{
 			Transport: &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: c.APIInsecureSkipVerify},
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+					MinVersion:         tls.VersionTLS12,
+				},
 			},
 		}
-		level.Warn(c.Logger).Log("msg", "HTTP InsecureSkipVerify is enabled.")
+		c.Logger.Warn("HTTP InsecureSkipVerify is enabled.")
 	}
 
 	client, err := tfe.NewClient(config)
 	if err != nil {
-		level.Error(c.Logger).Log("msg", "Error creating tfe client", "err", err)
+		c.Logger.Error("Error creating tfe client", "err", err)
 		os.Exit(1)
 	}
 	c.Client = *client

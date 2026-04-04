@@ -20,3 +20,7 @@ terraform-cloud-exporter
 
 # Other
 .DS_Store
+
+# Terraform
+.terraform
+.terraform.lock.hcl
