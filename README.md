@@ -59,6 +59,21 @@
         * Open Grafana: `http://localhost:3000/`
         * Clean up: `docker-compode down`
 
+#### Sample Terraform runs
+The `examples/` directory contains two minimal configurations for generating test runs in HCP Terraform:
+
+- `examples/success/` — applies a `random_string` resource, run ends as `applied`
+- `examples/error/` — uses a `precondition = false`, run ends as `errored`
+
+From either directory:
+
+        export TF_CLOUD_ORGANIZATION=<YourOrg>
+        export TF_TOKEN_app_terraform_io=<YourToken>
+        terraform init
+        terraform apply -auto-approve
+
+These are useful for verifying the exporter's `tf_workspaces_info{current_run_status="..."}` metric reflects real run states.
+
 #### Go tests
 1. Apply style guides: `go fmt ./...`
 1. Static analysis: `go vet ./...`

@@ -3,13 +3,11 @@ package collector
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"time"
 
 	"github.com/kaizendorks/terraform-cloud-exporter/internal/setup"
-
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 
 	tfe "github.com/hashicorp/go-tfe"
 
@@ -26,7 +24,7 @@ const (
 // Exporter collects TF metrics. It implements the prometheus.Collector interface.
 type Exporter struct {
 	ctx      context.Context
-	logger   log.Logger
+	logger   *slog.Logger
 	config   setup.Config
 	scrapers []Scraper
 	metrics  Metrics
@@ -34,7 +32,6 @@ type Exporter struct {
 
 // Metrics represents exporter metrics which values can be carried between http requests.
 type Metrics struct {
-	TotalScrapes prometheus.Counter
 	ScrapeErrors *prometheus.CounterVec
 	Error        prometheus.Gauge
 }
@@ -63,7 +60,6 @@ func New(ctx context.Context, config setup.Config, metrics Metrics) *Exporter {
 
 // Describe implements the prometheus.Collector interface.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
-	ch <- e.metrics.TotalScrapes.Desc()
 	ch <- e.metrics.Error.Desc()
 	e.metrics.ScrapeErrors.Describe(ch)
 }
@@ -72,19 +68,17 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.scrape(e.ctx, ch)
 
-	ch <- e.metrics.TotalScrapes
 	ch <- e.metrics.Error
 	e.metrics.ScrapeErrors.Collect(ch)
 }
 
 func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) {
-	e.metrics.TotalScrapes.Inc()
 	if len(e.config.Organizations) == 0 {
 		// Note: At some point this will return a paginated response.
-		oo, err := e.config.Client.Organizations.List(ctx, tfe.OrganizationListOptions{})
+		oo, err := e.config.Client.Organizations.List(ctx, &tfe.OrganizationListOptions{})
 		if err != nil {
 			e.metrics.Error.Set(1)
-			level.Error(e.logger).Log("msg", "Unable to List Organizations", "err", err)
+			e.logger.Error("Unable to List Organizations", "err", err)
 			return
 		}
 
@@ -104,7 +98,7 @@ func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) {
 			label := "collect." + scraper.Name()
 			scrapeTime := time.Now()
 			if err := scraper.Scrape(ctx, &e.config, ch); err != nil {
-				level.Error(e.logger).Log("msg", "Error from scraper", "scraper", scraper.Name(), "err", err)
+				e.logger.Error("Error from scraper", "scraper", scraper.Name(), "err", err)
 				e.metrics.ScrapeErrors.WithLabelValues(label).Inc()
 				e.metrics.Error.Set(1)
 			}
@@ -116,12 +110,6 @@ func (e *Exporter) scrape(ctx context.Context, ch chan<- prometheus.Metric) {
 // NewMetrics creates new Metrics instance.
 func NewMetrics() Metrics {
 	return Metrics{
-		TotalScrapes: prometheus.NewCounter(prometheus.CounterOpts{
-			Namespace: namespace,
-			Subsystem: exporter,
-			Name:      "scrapes_total",
-			Help:      "Total number of times the Terraform API was scraped for metrics.",
-		}),
 		ScrapeErrors: prometheus.NewCounterVec(prometheus.CounterOpts{
 			Namespace: namespace,
 			Subsystem: exporter,

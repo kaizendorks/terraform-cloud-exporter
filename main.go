@@ -2,16 +2,18 @@ package main
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/kaizendorks/terraform-cloud-exporter/internal/collector"
 	"github.com/kaizendorks/terraform-cloud-exporter/internal/setup"
-
-	"github.com/go-kit/kit/log/level"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -33,7 +35,7 @@ func newHandler(metrics collector.Metrics, config setup.Config) http.HandlerFunc
 		if v := r.Header.Get("X-Prometheus-Scrape-Timeout-Seconds"); v != "" {
 			timeoutSeconds, err := strconv.ParseFloat(v, 64)
 			if err != nil {
-				level.Error(config.Logger).Log("msg", "Failed to parse timeout from Prometheus header", "err", err)
+				config.Logger.Error("Failed to parse timeout from Prometheus header", "err", err)
 			} else {
 				// Create new timeout context with request context as parent.
 				ctx, cancel := context.WithTimeout(ctx, time.Duration(timeoutSeconds*float64(time.Second)))
@@ -51,15 +53,15 @@ func newHandler(metrics collector.Metrics, config setup.Config) http.HandlerFunc
 			registry,
 		}
 		// Delegate http serving to Prometheus client library, which will call collector.Collect.
-		h := promhttp.HandlerFor(gatherers, promhttp.HandlerOpts{})
+		h := promhttp.HandlerFor(gatherers, promhttp.HandlerOpts{EnableOpenMetrics: true})
 		h.ServeHTTP(w, r)
 	}
 }
 
 func main() {
 	config := setup.NewConfig()
-	level.Info(config.Logger).Log("msg", "Starting tf_exporter", "version", Version, "revision", Commit)
-	level.Debug(config.Logger).Log("msg", "Build Context", "go", GoVersion, "date", BuildDate)
+	config.Logger.Info("Starting tf_exporter", "version", Version, "revision", Commit)
+	config.Logger.Log(context.Background(), slog.LevelDebug, "Build Context", "go", GoVersion, "date", BuildDate)
 
 	handlerFunc := newHandler(collector.NewMetrics(), config)
 	http.Handle("/metrics", promhttp.InstrumentMetricHandler(prometheus.DefaultRegisterer, handlerFunc))
@@ -73,9 +75,24 @@ func main() {
 			</html>`))
 	})
 
-	level.Info(config.Logger).Log("msg", "Listening on address", "address", config.ListenAddress)
-	if err := http.ListenAndServe(config.ListenAddress, nil); err != nil {
-		level.Error(config.Logger).Log("msg", "Error starting HTTP server", "err", err)
-		os.Exit(1)
+	srv := &http.Server{Addr: config.ListenAddress}
+
+	go func() {
+		config.Logger.Info("Listening on address", "address", config.ListenAddress)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			config.Logger.Error("Error starting HTTP server", "err", err)
+			os.Exit(1)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	config.Logger.Info("Shutting down server")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		config.Logger.Error("Server forced to shutdown", "err", err)
 	}
 }
