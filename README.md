@@ -2,7 +2,7 @@
 >Prometheus exporter for Terraform Cloud/Enterprise metrics.
 
 > [!NOTE]
-> There is a newer version of this exporter being maintained by a Senior Staff Solutions Engineer at HashiCorp: **[TFBI (Terraform Business Insights)](https://github.com)**.
+> There is a newer version of this exporter being maintained by a Senior Staff Solutions Engineer at HashiCorp: **[TFBI (Terraform Business Insights)](https://github.com/nicolaka/TFBI)**.
 >
 > It contains updated metrics and Grafana dashboards for Terraform Cloud and Enterprise.
 
