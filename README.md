@@ -1,6 +1,11 @@
 # Terraform Cloud/Enterprise Exporter
 >Prometheus exporter for Terraform Cloud/Enterprise metrics.
 
+> [!NOTE]
+> There is a newer version of this exporter being maintained by a Senior Staff Solutions Engineer at HashiCorp: **[TFBI (Terraform Business Insights)](https://github.com)**.
+>
+> It contains updated metrics and Grafana dashboards for Terraform Cloud and Enterprise.
+
 [![Go Test](https://github.com/kaizendorks/terraform-cloud-exporter/workflows/Go%20Test/badge.svg)](https://github.com//kaizendorks/terraform-cloud-exporter/actions?workflow=Go%20Test)
 [![GitHub release](https://img.shields.io/github/release/kaizendorks/terraform-cloud-exporter.svg)](https://github.com//kaizendorks/terraform-cloud-exporter/releases/latest)
 [![Docker Release](https://github.com/kaizendorks/terraform-cloud-exporter/workflows/Docker%20Release/badge.svg)](https://github.com//kaizendorks/terraform-cloud-exporter/actions?workflow=Docker%20Release)
