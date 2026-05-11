@@ -16,9 +16,9 @@ type CLI struct {
 	Organizations         []string `short:"o" env:"TF_ORGANIZATIONS" placeholder:"ORG1,ORG2" help:"List of the Organization names to scrape from (Ommit to scrape all)."`
 	APIToken              string   `short:"t" env:"TF_API_TOKEN" help:"User token for autheticating with the API."`
 	APITokenFile          *os.File `placeholder:"/path/to/file" help:"File containing user token for autheticating with the API."`
-	APIAddress            string   `placeholder:"https://app.terraform.io/" help:"Terraform API address to scrape metrics from."`
+	APIAddress            string   `placeholder:"https://app.terraform.io/" env:"TF_API_ADDRESS" help:"Terraform API address to scrape metrics from."`
 	APIInsecureSkipVerify bool     `help:"Accept any certificate presented by the API."`
-	ListenAddress         string   `default:"0.0.0.0:9100" help:"Address to listen on for web interface and telemetry."`
+	ListenAddress         string   `default:"0.0.0.0:9100" env:"TF_LISTEN_ADDRESS" help:"Address to listen on for web interface and telemetry."`
 	LogLevel              string   `default:"info" enum:"debug,info,warn,error" help:"Only log messages with the given severity or above. One of: [${enum}]"`
 	LogFormat             string   `default:"logfmt" enum:"logfmt,json" help:"Output format of log messages. One of: [${enum}]"`
 }
